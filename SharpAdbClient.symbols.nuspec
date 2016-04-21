@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package>
   <metadata>
-    <id>SharpAdbClient</id>
+    <id>SharpAdbClient.symbols</id>
     <version>$version$</version>
     <authors>The Android Open Source Project, Ryan Conrad, Quamotion</authors>
     <owners>Quamotion</owners>
@@ -17,6 +17,8 @@
   </metadata>
   <files>
     <file src="SharpAdbClient\bin\Release\SharpAdbClient.dll" target="lib\net45" />
+    <file src="SharpAdbClient\bin\Release\SharpAdbClient.pdb" target="lib\net45" />
     <file src="SharpAdbClient\bin\Release\SharpAdbClient.xml" target="lib\net45" />
+    <file src="SharpAdbClient\**\*.*" exclude="SharpAdbClient\bin\**\*.*;SharpAdbClient\obj\**\*.*" target="src" />
   </files>
 </package>
