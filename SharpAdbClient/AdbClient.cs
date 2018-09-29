@@ -316,8 +316,112 @@ namespace SharpAdbClient
             }
         }
 
-        /// <inheritdoc/>
-        public Task ExecuteRemoteCommandAsync(string command, DeviceData device, IShellOutputReceiver receiver, CancellationToken cancellationToken, int maxTimeToOutputResponse)
+		/// <inheritdoc/>
+		public bool CreateReverse(DeviceData device, string local, string remote, bool allowRebind)
+		{
+			this.EnsureDevice(device);
+
+			using (IAdbSocket socket = this.adbSocketFactory(this.EndPoint))
+			{
+				string rebind = allowRebind ? string.Empty : "norebind:";
+
+				socket.SendAdbRequest("host:transport:" + device.Serial);
+				var response = socket.ReadAdbResponse();
+
+				if (!response.Okay)
+					return false;
+
+				socket.SendAdbRequest($"reverse:forward:{rebind}{local};{remote}");
+				response = socket.ReadAdbResponse();
+
+				if (!response.Okay)
+					return false;
+
+				return true;
+			}
+		}
+
+		/// <inheritdoc/>
+		public bool CreateReverse(DeviceData device, ForwardSpec local, ForwardSpec remote, bool allowRebind)
+		{
+			return this.CreateReverse(device, local?.ToString(), remote?.ToString(), allowRebind);
+		}
+
+		/// <inheritdoc/>
+		public bool RemoveReverse(DeviceData device, int localPort)
+		{
+			this.EnsureDevice(device);
+
+			using (IAdbSocket socket = this.adbSocketFactory(this.EndPoint))
+			{
+				socket.SendAdbRequest("host:transport:" + device.Serial);
+				var response = socket.ReadAdbResponse();
+
+				if (!response.Okay)
+					return false;
+
+				socket.SendAdbRequest($"reverse:killforward:tcp:{localPort}");
+				response = socket.ReadAdbResponse();
+
+				if (!response.Okay)
+					return false;
+			}
+
+			return true;
+		}
+
+		/// <inheritdoc/>
+		public bool RemoveAllReverse(DeviceData device)
+		{
+			this.EnsureDevice(device);
+
+			using (IAdbSocket socket = this.adbSocketFactory(this.EndPoint))
+			{
+				socket.SendAdbRequest("host:transport:" + device.Serial);
+				var response = socket.ReadAdbResponse();
+
+				if (!response.Okay)
+					return false;
+
+				socket.SendAdbRequest($"reverse:killforward-all");
+				response = socket.ReadAdbResponse();
+
+				if (!response.Okay)
+					return false;
+			}
+
+			return true;
+		}
+
+		/// <inheritdoc/>
+		public IEnumerable<ForwardData> ListReverse(DeviceData device)
+		{
+			this.EnsureDevice(device);
+
+			using (IAdbSocket socket = this.adbSocketFactory(this.EndPoint))
+			{
+				socket.SendAdbRequest("host:transport:" + device.Serial);
+				var response = socket.ReadAdbResponse();
+
+				if (!response.Okay)
+					return null;
+
+				socket.SendAdbRequest($"reverse:list-forward");
+				response = socket.ReadAdbResponse();
+
+				if (!response.Okay)
+					return null;
+
+				var data = socket.ReadString();
+
+				var parts = data.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+				return parts.Select(p => ForwardData.FromString(p));
+			}
+		}
+
+		/// <inheritdoc/>
+		public Task ExecuteRemoteCommandAsync(string command, DeviceData device, IShellOutputReceiver receiver, CancellationToken cancellationToken, int maxTimeToOutputResponse)
         {
             return this.ExecuteRemoteCommandAsync(command, device, receiver, cancellationToken, maxTimeToOutputResponse, Encoding);
         }
@@ -637,5 +741,5 @@ namespace SharpAdbClient
                 throw new ArgumentOutOfRangeException(nameof(device), "You must specific a serial number for the device");
             }
         }
-    }
+	}
 }

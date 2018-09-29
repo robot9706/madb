@@ -68,16 +68,67 @@ namespace SharpAdbClient
             return client.CreateForward(device, $"tcp:{localPort}", $"local:{remoteSocket}", true);
         }
 
-        /// <summary>
-        /// Executes a shell command on the remote device
-        /// </summary>
-        /// <param name="client">
-        /// An instance of a class that implements the <see cref="IAdbClient"/> interface.
-        /// </param>
-        /// <param name="command">The command to execute</param>
-        /// <param name="device">The device to execute on</param>
-        /// <param name="rcvr">The shell output receiver</param>
-        public static void ExecuteRemoteCommand(this IAdbClient client, string command, DeviceData device, IShellOutputReceiver rcvr)
+		/// <summary>
+		///  Creates a reversed port forwarding between a local and a remote port.
+		/// </summary>
+		/// <param name="client">
+		/// An instance of a class that implements the <see cref="IAdbClient"/> interface.
+		/// </param>
+		/// <param name="device">
+		/// The device to which to forward the connections.
+		/// </param>
+		/// <param name="localPort">
+		/// The local device port to forward.
+		/// </param>
+		/// <param name="remotePort">
+		/// The remote host port to forward to
+		/// </param>
+		/// <exception cref="AdbException">
+		/// failed to submit the reverse command.
+		/// or
+		/// Device rejected command:  + resp.Message
+		/// </exception>
+		public static bool CreateReverse(this IAdbClient client, DeviceData device, int localPort, int remotePort)
+		{
+			return client.CreateReverse(device, $"tcp:{localPort}", $"tcp:{remotePort}", true);
+		}
+
+		/// <summary>
+		///  Creates a reversed port forwarding between a local and a remote UNIX socket.
+		/// </summary>
+		/// <param name="client">
+		/// An instance of a class that implements the <see cref="IAdbClient"/> interface.
+		/// </param>
+		/// <param name="device">
+		/// The device to which to forward the connections.
+		/// </param>
+		/// <param name="localPort">
+		/// The local port to forward.
+		/// </param>
+		/// <param name="remoteSocket">
+		/// The remote Unix socket.
+		/// </param>
+		/// <exception cref="AdbException">
+		/// The client failed to submit the forward command.
+		/// </exception>
+		/// <exception cref="AdbException">
+		/// The device rejected command. The error message will include the error message provided by the device.
+		/// </exception>
+		public static bool CreateReverse(this IAdbClient client, DeviceData device, int localPort, string remoteSocket)
+		{
+			return client.CreateReverse(device, $"tcp:{localPort}", $"local:{remoteSocket}", true);
+		}
+
+		/// <summary>
+		/// Executes a shell command on the remote device
+		/// </summary>
+		/// <param name="client">
+		/// An instance of a class that implements the <see cref="IAdbClient"/> interface.
+		/// </param>
+		/// <param name="command">The command to execute</param>
+		/// <param name="device">The device to execute on</param>
+		/// <param name="rcvr">The shell output receiver</param>
+		public static void ExecuteRemoteCommand(this IAdbClient client, string command, DeviceData device, IShellOutputReceiver rcvr)
         {
             ExecuteRemoteCommand(client, command, device, rcvr, AdbClient.Encoding);
         }
